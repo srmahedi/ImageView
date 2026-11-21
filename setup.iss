@@ -22,7 +22,6 @@ ArchitecturesAllowed=x64compatible
 ; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-LicenseFile=LICENSE.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 OutputDir=Output
@@ -42,7 +41,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "dist\ImageView\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\ImageView\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
-Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

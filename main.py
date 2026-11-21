@@ -280,16 +280,22 @@ class ImageViewer(QMainWindow):
         )
         self.label.setPixmap(scaled)
 
+    def _go_to_next_image(self):
+        if self.files:
+            self.index = (self.index + 1) % len(self.files)
+            self.show_image()
+
+    def _go_to_previous_image(self):
+        if self.files:
+            self.index = (self.index - 1) % len(self.files)
+            self.show_image()
+
     def keyPressEvent(self, event):
         key = event.key()
         if key in (Qt.Key.Key_Right, Qt.Key.Key_Down, Qt.Key.Key_PageDown, Qt.Key.Key_Space):
-            if self.files:
-                self.index = (self.index + 1) % len(self.files)
-                self.show_image()
+            self._go_to_next_image()
         elif key in (Qt.Key.Key_Left, Qt.Key.Key_Up, Qt.Key.Key_PageUp):
-            if self.files:
-                self.index = (self.index - 1) % len(self.files)
-                self.show_image()
+            self._go_to_previous_image()
         elif key == Qt.Key.Key_Escape:
             self.close()
         elif key == Qt.Key.Key_F11:
@@ -299,6 +305,22 @@ class ImageViewer(QMainWindow):
                 self.showFullScreen()
         else:
             super().keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        if event.button() != Qt.MouseButton.LeftButton:
+            super().mousePressEvent(event)
+            return
+
+        width = self.width()
+        x = event.position().x()
+        if x < width / 3:
+            self._go_to_previous_image()
+            event.accept()
+        elif x >= width * 2 / 3:
+            self._go_to_next_image()
+            event.accept()
+        else:
+            super().mousePressEvent(event)
 
     def resizeEvent(self, event):
         """Handle window resize"""
