@@ -97,6 +97,15 @@ class ImageViewer(QMainWindow):
         self.anim_frame_count = 0
         self.anim_timer = QTimer(self)
         self.anim_timer.timeout.connect(self._next_anim_frame)
+
+        self._nav_repeat_direction = None
+        self._nav_delay_timer = QTimer(self)
+        self._nav_delay_timer.setSingleShot(True)
+        self._nav_delay_timer.setInterval(500)
+        self._nav_delay_timer.timeout.connect(self._start_nav_repeat)
+        self._nav_repeat_timer = QTimer(self)
+        self._nav_repeat_timer.setInterval(100)
+        self._nav_repeat_timer.timeout.connect(self._repeat_nav)
         
         # Cache for next frame to preload just one ahead
         self.next_frame_to_preload = 1
@@ -290,6 +299,31 @@ class ImageViewer(QMainWindow):
             self.index = (self.index - 1) % len(self.files)
             self.show_image()
 
+    def _begin_nav_repeat(self, direction):
+        self._stop_nav_repeat()
+        if len(self.files) > 1:
+            self._nav_repeat_direction = direction
+            self._nav_delay_timer.start()
+
+    def _start_nav_repeat(self):
+        if self._nav_repeat_direction:
+            self._nav_repeat_timer.start()
+
+    def _repeat_nav(self):
+        if not (QApplication.mouseButtons() & Qt.MouseButton.LeftButton):
+            self._stop_nav_repeat()
+            return
+
+        if self._nav_repeat_direction == "previous":
+            self._go_to_previous_image()
+        elif self._nav_repeat_direction == "next":
+            self._go_to_next_image()
+
+    def _stop_nav_repeat(self):
+        self._nav_repeat_direction = None
+        self._nav_delay_timer.stop()
+        self._nav_repeat_timer.stop()
+
     def keyPressEvent(self, event):
         key = event.key()
         if key in (Qt.Key.Key_Right, Qt.Key.Key_Down, Qt.Key.Key_PageDown, Qt.Key.Key_Space):
@@ -315,12 +349,23 @@ class ImageViewer(QMainWindow):
         x = event.position().x()
         if x < width / 3:
             self._go_to_previous_image()
+            self._begin_nav_repeat("previous")
             event.accept()
         elif x >= width * 2 / 3:
             self._go_to_next_image()
+            self._begin_nav_repeat("next")
             event.accept()
         else:
             super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._stop_nav_repeat()
+        super().mouseReleaseEvent(event)
+
+    def leaveEvent(self, event):
+        self._stop_nav_repeat()
+        super().leaveEvent(event)
 
     def resizeEvent(self, event):
         """Handle window resize"""
@@ -358,6 +403,7 @@ class ImageViewer(QMainWindow):
 
     def closeEvent(self, event):
         """Clean up resources when closing"""
+        self._stop_nav_repeat()
         self._clear_anim()
         super().closeEvent(event)
 
